@@ -1,84 +1,92 @@
 import bcrypt from "bcryptjs";
-import UserModel from "../models/user.model";
+import { UserModel } from "../models/user";
 import { generateJWT } from "../helpers";
-import {
-  ResponseAuth,
-  ResponseValidateToken,
-} from "../domain/auth-response.interface";
 import {
   RequestLoginUser,
   RequestValidateToken,
-} from "../domain/auth-request.interface";
+  ResponseLoginUser,
+  ResponseValidateToken,
+} from "../domain/auth";
 
-const loginUser = async (request: RequestLoginUser): Promise<ResponseAuth> => {
-  const { email, password } = request;
+const loginUser = async ({
+  email,
+  password,
+}: RequestLoginUser): Promise<ResponseLoginUser> => {
   try {
-    // En caso no encuentre nada el findOne retorna null
-    // Return the first "doc" that has the email sent for "req"
-    const user = await UserModel.findOne({ email });
-    if (!user) {
+    // user exist validate in middleware "emailNotExist"
+    const userFromDb = await UserModel.findOne({ email });
+    if (!userFromDb)
       return {
-        status: 400, // solicitud incorrecta
         ok: false,
-        msg: `El usuario ${email} no se encuentra registrado`,
+        status: 400,
+        msg: `Usuario / Password no son correctos - correo`,
       };
-    }
+
+    if (userFromDb.state === false)
+      return {
+        ok: false,
+        status: 400,
+        msg: `Usuario / Password no son correctos - state`,
+      };
+
     // Validate password
-    const validPassword = bcrypt.compareSync(password, user.password);
     // If not exist then the password is invalid
-    if (!validPassword) {
+    const validPassword = bcrypt.compareSync(password, userFromDb.password);
+    if (!validPassword)
       return {
-        status: 400, // solicitud incorrecta
         ok: false,
-        msg: `El password es incorrecto`,
+        status: 400,
+        msg: `Usuario / Password no son correctos - password`,
       };
-    }
+
     // Generate JWT
-    const token = await generateJWT(user.id, user.name);
+    const token = await generateJWT(userFromDb.id, userFromDb.name);
 
     // return data from login
     return {
-      status: 200, // ok
       ok: true,
+      status: 200,
       data: {
-        uid: user.id,
-        name: user.name,
+        uid: userFromDb.id,
+        name: userFromDb.name,
         token,
       },
     };
   } catch (error) {
-    console.log(error);
+    let msg = "";
+    if (error instanceof Error) msg += error.message;
     return {
-      status: 500, // Error interno del servidor
       ok: false,
-      msg: "Por favor hable con el administrador",
+      status: 500,
+      msg: `Por favor hable con el administrador | ${msg}`,
     };
   }
 };
-// ResponseAuth
-const validateToken = async (
-  request: RequestValidateToken
-): Promise<ResponseValidateToken> => {
-  const { uid, name } = request;
+
+const validateToken = async ({
+  uidAuthenticated,
+  nameAuthenticated,
+}: RequestValidateToken): Promise<ResponseValidateToken> => {
   try {
     // Generate new JWT
-    const token = await generateJWT(uid, name);
+    const token = await generateJWT(uidAuthenticated, nameAuthenticated);
     // return data from validateToken
     return {
-      status: 200,
       ok: true,
+      status: 200,
       data: {
-        uid,
-        name,
+        uid: uidAuthenticated,
+        name: nameAuthenticated,
         token,
       },
     };
   } catch (error) {
-    console.log(error);
+    let msg = "";
+    if (error instanceof Error) msg += error.message;
     return {
-      status: 500,
       ok: false,
-      msg: "No se pudo generar el token",
+      status: 500,
+      msg: `No se pudo generar el token | ${msg}`,
     };
   }
 };

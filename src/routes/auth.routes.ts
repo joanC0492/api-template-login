@@ -6,11 +6,12 @@
 import { Router } from "express";
 import { check } from "express-validator";
 import { loginUser, validateToken } from "../controllers/auth.controller";
-import { fieldsValidate, jwtValidate } from "../middlewares";
+import { validateFields, validateJWT } from "../middlewares";
 
 const router: Router = Router();
 
-// login
+// http://localhost:4001/api/v1/auth
+// Body - raw - JSON
 router.post(
   "/",
   [
@@ -18,12 +19,13 @@ router.post(
     check("password")
       .isLength({ min: 8 })
       .withMessage("La contraseña debe tener al menos 8 caracteres"),
-    fieldsValidate,
+    validateFields,
   ],
   loginUser
 );
 
+// http://localhost:4001/api/v1/auth/renew
 // Saber si estoy autenticado para ellos validamos el token
-router.get("/renew", jwtValidate, validateToken);
+router.get("/renew", validateJWT, validateToken);
 
 export default router;

@@ -3,7 +3,7 @@ import { validationResult } from "express-validator";
 
 /* El next hace que recorra cada validacion del arreglo, en caso todo este 
 correcto, llegara al controlador*/
-export const fieldsValidate = (
+export const validateFields = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -11,7 +11,6 @@ export const fieldsValidate = (
   // Manejo de errores
   // En caso no haya errores devuelve un array vacio
   const errors = validationResult(req);
-  console.log(errors);
   // Si hay errores
   // 400 - Es un error del front al mandar los datos
   // <Si no esta vacio es porque hay error>

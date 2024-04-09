@@ -1,18 +1,16 @@
-interface User {
+// const payload = { uid, name };
+export interface PayloadData {
+  // Lo que recibimos al generar
   uid: string;
   name: string;
-  token: string;
 }
-export interface ResponseAuth {
-  ok: boolean;
-  msg?: string;
-  data?: User;
-  status: HttpStatusCode;
+export interface Payload extends PayloadData {
+  // Siempre
+  iat: number;
+  exp: number;
 }
 
-export interface ResponseValidateToken extends ResponseAuth {}
-
-type HttpStatusCode =
+export type HttpStatusCode =
   | 100
   | 101
   | 102

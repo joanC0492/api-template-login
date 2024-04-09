@@ -1,2 +1,2 @@
-export * from "./jwtValidate";
-export * from "./fieldsValidate";
+export * from "./validateJWT";
+export * from "./validateFields";
